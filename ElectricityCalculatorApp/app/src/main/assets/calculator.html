@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Electricity Consumption Calculator</title>
+<style>
+:root{--blue:#1565c0;--blue2:#0288d1;--ink:#18324a;--line:#d7e7f5;--green:#168b4b;--daily:#00796b;--monthly:#7b1fa2}
+*{box-sizing:border-box}
+body{margin:0;padding:10px;background:linear-gradient(135deg,#1976d2,#03a9f4 58%,#54d6ef);color:var(--ink);font-family:Segoe UI,Arial,sans-serif;min-height:100vh}
+.app{width:min(1080px,100%);margin:auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 12px 32px #063f7b55}
+header{padding:14px 12px;background:linear-gradient(120deg,#0d47a1,var(--blue2));color:#fff;text-align:center}
+h1{font-size:clamp(20px,4vw,29px);margin:0;line-height:1.2}
+.content{padding:9px}
+table{width:100%;border-collapse:separate;border-spacing:0;font-size:13px}
+.consumption-table{width:690px;max-width:100%;margin:0 auto;table-layout:fixed}
+.consumption-table th:nth-child(1),.consumption-table td:nth-child(1){width:230px}
+.consumption-table th:nth-child(2),.consumption-table td:nth-child(2){width:82px}
+.consumption-table th:nth-child(3),.consumption-table td:nth-child(3){width:76px}
+.consumption-table th:nth-child(4),.consumption-table td:nth-child(4){width:82px}
+.consumption-table th:nth-child(5),.consumption-table td:nth-child(5){width:105px}
+.consumption-table th:nth-child(6),.consumption-table td:nth-child(6){width:115px}
+th{padding:7px 4px;background:var(--blue);color:#fff;border-right:1px solid #ffffff3b}
+th:first-child{border-radius:8px 0 0}th:last-child{border-radius:0 8px 0 0;border:0}
+td{padding:3px 4px;text-align:center;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+tbody tr:nth-child(odd){background:#f7fbff}tbody tr:nth-child(even){background:#eaf5ff}
+td:first-child{border-left:1px solid var(--line);text-align:left}
+input{min-width:0;width:100%;height:30px;border:1px solid #87bce7;border-radius:6px;background:#fff;padding:3px 5px;color:var(--ink);font:inherit;text-align:center}
+.appliance-cell{display:flex;align-items:center;justify-content:flex-start;gap:6px}.appliance-icon{flex:0 0 24px;text-align:center;font-size:18px;line-height:1}.name{width:180px;max-width:180px;text-align:left}.watt{max-width:68px}.qty,.hours{max-width:64px}
+input:focus{outline:3px solid #ffca285c;border-color:#1565c0}
+.daily{color:var(--daily);font-weight:700}.monthly{color:var(--monthly);font-weight:700}
+.totals{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.total{padding:10px;border-radius:9px;background:linear-gradient(120deg,#168b4b,#38ad67);color:#fff;text-align:center;font-weight:700;box-shadow:0 3px 8px #168b4b3d}
+.total span{display:block;font-size:20px;margin-top:2px}
+.chart{margin:10px 0 0;border:1px solid #9aa9b3;border-radius:11px;overflow:hidden;background:#fff}
+.chart h2{margin:0;padding:8px;background:linear-gradient(120deg,#ffe900,#fff44f);color:#111;text-align:center;font-size:18px}
+.chart table{width:100%;table-layout:auto;font-size:12px}.chart th{white-space:nowrap;border-radius:0!important;background:#f4f8fa;color:#111;border:1px solid #91a0aa;padding:5px 2px}
+.chart td{border:1px solid #aeb9bf;padding:5px 3px}.chart .chart-label{background:#fff4e8;text-align:left;font-weight:700}
+.chart .chart-value{background:#fff4e8;font-weight:700}.chart .chart-units{background:#fff700;font-size:15px;font-weight:800}
+.chart .period{background:#fff700;font-weight:800}.chart small{display:block;margin-top:2px;font-size:10px}
+.mobile-chart{display:none}
+.bill{max-width:520px;margin:10px auto 0;padding:12px 14px;border-radius:13px;background:linear-gradient(145deg,#fff9db,#fff);border:1px solid #ffd45e;box-shadow:0 5px 16px #845e1830}
+.bill h2{margin:0 0 7px;color:#0d47a1;text-align:center;font-size:20px}
+.bill-row{display:flex;justify-content:space-between;gap:14px;padding:4px 2px;border-bottom:1px dashed #d4b04b}
+.bill-row span:last-child{font-variant-numeric:tabular-nums;font-weight:700}
+.bill-total{margin-top:5px;padding:8px;border:0;border-radius:8px;background:#0d8a49;color:#fff;font-size:18px;font-weight:800}
+.actions{display:flex;justify-content:center;gap:9px;margin-top:10px}
+button{min-width:105px;min-height:42px;border:0;border-radius:9px;padding:8px 16px;color:#fff;font:700 15px inherit;cursor:pointer;box-shadow:0 3px 8px #0002}
+#reset{background:#ef6c00}#print{background:#1565c0}button:active{transform:translateY(1px)}
+@media(max-width:700px){
+ html,body{width:100%;max-width:100%;overflow-x:hidden}body{padding:2px}.app{width:100%;border-radius:8px}.content{padding:4px}header{padding:9px 4px}h1{font-size:19px}
+ .consumption-table{width:100%;max-width:none;table-layout:auto}.consumption-table th,.consumption-table td{width:auto!important}
+ table,thead,tbody,tr,th,td{display:block}thead{display:none}tbody{display:grid;gap:6px}
+ tbody tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;padding:4px;border:1px solid #8fc7ef;border-radius:7px}
+ tbody tr:nth-child(odd){background:#f7fbff}tbody tr:nth-child(even){background:#edf7ff}
+ td{border:0!important;padding:0;text-align:left}
+ td:first-child{grid-column:1/-1}.appliance-cell{gap:4px}.appliance-icon{flex-basis:22px;font-size:17px}.name{width:100%;max-width:none;height:27px;font-weight:700;min-width:0}
+ td:nth-child(2)::before{content:"Watt"}td:nth-child(3)::before{content:"Qty"}td:nth-child(4)::before{content:"Hours"}
+ td:nth-child(5)::before{content:"Daily"}td:nth-child(6)::before{content:"Monthly"}
+ td::before{display:block;margin:0 0 1px;color:#37627e;font-size:10px;font-weight:700;line-height:1}
+ td:nth-child(5),td:nth-child(6){padding:3px 4px;border-radius:5px!important;background:#fff;font-size:12px}
+ td:nth-child(5){color:var(--daily)}td:nth-child(6){color:var(--monthly)}
+ td:nth-child(5)::after,td:nth-child(6)::after{content:" units";font-size:10px}
+ input{height:30px;padding:2px 3px;font-size:13px}.watt,.qty,.hours{max-width:none}.totals{gap:4px;margin-top:6px}.total{padding:6px 2px;font-size:11px}.total span{font-size:17px}
+ .chart{width:100%;margin-top:6px;overflow:hidden;border-radius:7px}.chart h2{padding:6px 2px;font-size:15px}.chart>table{display:none}
+ .mobile-chart{display:block;padding:5px;background:#f4f9fc}.mobile-chart-summary{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px}
+ .mobile-chart-summary div{padding:6px 4px;border:1px solid #d1aa00;border-radius:6px;background:#fff700;text-align:center;font-size:11px;font-weight:700}
+ .mobile-chart-summary strong{display:block;margin-top:2px;font-size:15px}.mobile-slabs{display:grid;gap:5px}
+ .mobile-slab{border:1px solid #9eb2bd;border-radius:7px;overflow:hidden;background:#fff}.mobile-slab h3{display:flex;justify-content:space-between;margin:0;padding:5px 7px;background:#e7f3fa;color:#124f75;font-size:12px}
+ .mobile-slab-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:#c8d5dc}.mobile-slab-grid div{display:flex;justify-content:space-between;gap:4px;padding:5px 6px;background:#fff;font-size:11px}
+ .mobile-slab-grid span{color:#526975}.mobile-slab-grid strong{font-variant-numeric:tabular-nums}
+ .bill{width:100%;margin-top:6px;padding:9px 10px;border-radius:8px}.bill h2{font-size:18px}.bill-row{padding:3px 1px;font-size:13px}.bill-total{font-size:16px}
+ .actions{gap:6px;margin-top:7px}button{min-width:90px;min-height:38px;padding:6px 12px;font-size:14px}
+}
+@media print{
+ @page{margin:10mm}body{padding:0;background:#fff}.app{width:100%;box-shadow:none;border:1px solid #aaa}header{background:#1565c0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .actions{display:none}.content{padding:7px}table{font-size:10px}th,td{padding:2px 3px}input{height:22px;border:0;padding:0;background:transparent}.totals,.bill{break-inside:avoid}.bill{box-shadow:none}
+ .chart{break-before:page;page-break-before:always;break-inside:avoid}.chart>table{display:table!important;width:100%;table-layout:auto}.chart th,.chart td{width:auto!important;white-space:nowrap}.mobile-chart{display:none!important}
+}
+</style>
+</head>
+<body>
+<main class="app">
+<header><h1>⚡ Electricity Consumption Calculator</h1></header>
+<div class="content">
+<table class="consumption-table" aria-label="Appliance electricity consumption">
+<thead><tr><th>Appliance</th><th>Watt</th><th>Qty</th><th>Hours</th><th>Daily Units</th><th>Monthly Units</th></tr></thead>
+<tbody id="appliances"></tbody>
+</table>
+<section class="totals" aria-live="polite">
+<div class="total">Total Daily Units<span id="totalDaily">0.00</span></div>
+<div class="total">Total Monthly Units<span id="totalMonthly">0.00</span></div>
+</section>
+<section class="chart" aria-live="polite">
+<h2>Bill Calculation Chart</h2>
+<table aria-label="Slab-wise bill calculation">
+<thead>
+<tr><th>Units</th><th id="chartUnits" class="chart-units">0.00</th><th>100<small>0–100</small></th><th>200<small>101–300</small></th><th>200<small>301–500</small></th><th>500<small>501–1000</small></th><th>1000<small>&gt;1000</small></th></tr>
+<tr><th>Bill Period</th><th class="period">1</th><th id="slabUnit0">0.00</th><th id="slabUnit1">0.00</th><th id="slabUnit2">0.00</th><th id="slabUnit3">0.00</th><th id="slabUnit4">0.00</th></tr>
+</thead>
+<tbody>
+<tr><td class="chart-label">Fixed Charges</td><td id="chartFixed" class="chart-value">₹0.00</td><td id="fixed0">0.00</td><td id="fixed1">0.00</td><td id="fixed2">0.00</td><td id="fixed3">0.00</td><td id="fixed4">0.00</td></tr>
+<tr><td class="chart-label">Energy Charges</td><td id="chartEnergy" class="chart-value">₹0.00</td><td id="energy0">0.00</td><td id="energy1">0.00</td><td id="energy2">0.00</td><td id="energy3">0.00</td><td id="energy4">0.00</td></tr>
+<tr><td class="chart-label">Other Charges</td><td id="chartOther" class="chart-value">₹0.00</td><td id="other0">0.00</td><td id="other1">0.00</td><td id="other2">0.00</td><td id="other3">0.00</td><td id="other4">0.00</td></tr>
+<tr><td class="chart-label">FAC</td><td id="chartFac" class="chart-value">₹0.00</td><td id="fac0">0.00</td><td id="fac1">0.00</td><td id="fac2">0.00</td><td id="fac3">0.00</td><td id="fac4">0.00</td></tr>
+</tbody>
+</table>
+<div class="mobile-chart">
+<div class="mobile-chart-summary">
+<div>Total Units<strong id="mobileChartUnits">0.00</strong></div>
+<div>Bill Period<strong>1 Month</strong></div>
+</div>
+<div id="mobileSlabs" class="mobile-slabs"></div>
+</div>
+</section>
+<section class="bill" aria-live="polite">
+<h2>Estimated Monthly Bill</h2>
+<div class="bill-row"><span>Energy Charges</span><span id="energy">₹0.00</span></div>
+<div class="bill-row"><span>Fixed Charges</span><span id="fixed">₹0.00</span></div>
+<div class="bill-row"><span>FAC</span><span id="fac">₹0.00</span></div>
+<div class="bill-row"><span>Electricity Duty</span><span id="duty">₹0.00</span></div>
+<div class="bill-row"><span>Other Charges</span><span id="other">₹0.00</span></div>
+<div class="bill-row bill-total"><span>Estimated Bill</span><span id="estimated">₹0.00</span></div>
+</section>
+<div class="actions"><button id="reset" type="button">Reset</button><button id="print" type="button">Print</button></div>
+</div>
+</main>
+<script>
+"use strict";
+const TARIFF_CONFIG=Object.freeze({
+ billPeriod:1,
+ slabWidths:[100,200,200,500,Infinity],
+ energyRates:[3.96,10.80,15.03,17.53,17.53],
+ facRates:[0.15,0.25,0.35,0.40,0.40],
+ otherChargeRates:[1.60,1.60,1.60,1.60,1.60],
+ fixedChargePerPeriod:130,
+ electricityDutyRate:0.16
+});
+const DEFAULT_APPLIANCES=[
+ ["Bulb",7,5],["Bulb",12,5],["Tube Light",20,6],["Fan BLDC",25,10],["Fan",80,10],["Table Fan",60,8],
+ ["Iron",800,0.5],["Geyser",2000,0.5],["Water Heater",2000,0.5],["AC 1 Ton",1400,6],["AC 2 Ton",1800,6],
+ ["Refrigerator 155L",200,8],["Refrigerator 300L",300,8],["Deep Freezer 500L",450,10],
+ ["Washing Machine",200,1],["Oven",3000,0.5],["Toaster",1000,0.25],["Mixer",200,0.25],["Cooker",1500,1],
+ ["Television",150,4],["Tape Recorder",50,2],["Computer",200,6],["Water Pump",1000,1],
+ ["Vehicle Charger",600,4],["Other",0,1],["Other",0,1]
+];
+const APPLIANCE_ICONS=["💡","💡","🔦","🌬️","🌬️","🌬️","👔","🚿","♨️","❄️","❄️","🧊","🧊","🧊","🫧","♨️","🍞","🥤","🍚","📺","📻","💻","🚰","🔌","⚙️","⚙️"];
+const tbody=document.getElementById("appliances");
+const mobileSlabs=document.getElementById("mobileSlabs");
+const money=new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",minimumFractionDigits:2,maximumFractionDigits:2});
+const SLAB_LABELS=["0–100","101–300","301–500","501–1000",">1000"];
+function safeNumber(value){const n=Number(value);return Number.isFinite(n)&&n>=0?n:0}
+function createRows(){
+ const fragment=document.createDocumentFragment();
+ DEFAULT_APPLIANCES.forEach(([name,watt,hours],index)=>{
+  const row=document.createElement("tr");
+  row.innerHTML=`<td><div class="appliance-cell"><span class="appliance-icon" aria-hidden="true">${APPLIANCE_ICONS[index]}</span><input class="name" type="text" aria-label="Appliance ${index+1} name"></div></td>
+  <td><input class="watt" type="number" min="0" step="any" inputmode="decimal" aria-label="${name} watt"></td>
+  <td><input class="qty" type="number" min="0" step="any" inputmode="decimal" value="0" aria-label="${name} quantity"></td>
+  <td><input class="hours" type="number" min="0" max="24" step="any" inputmode="decimal" value="${hours}" aria-label="${name} hours per day"></td>
+  <td class="daily">0.00</td><td class="monthly">0.00</td>`;
+  row.querySelector(".name").value=name;row.querySelector(".watt").value=watt;fragment.appendChild(row);
+ });
+ tbody.appendChild(fragment);
+}
+function calculateBill(units){
+ let remaining=units,energy=0,fac=0,other=0;
+ const slabs=[];
+ for(let i=0;i<TARIFF_CONFIG.slabWidths.length;i++){
+  const capacity=TARIFF_CONFIG.slabWidths[i]*TARIFF_CONFIG.billPeriod;
+  const slabUnits=Math.max(Math.min(remaining,capacity),0);
+  remaining-=slabUnits;
+  energy+=slabUnits*TARIFF_CONFIG.energyRates[i];
+  fac+=slabUnits*TARIFF_CONFIG.facRates[i];
+  other+=slabUnits*TARIFF_CONFIG.otherChargeRates[i];
+  slabs.push({units:slabUnits,energy:slabUnits*TARIFF_CONFIG.energyRates[i],fac:slabUnits*TARIFF_CONFIG.facRates[i],other:slabUnits*TARIFF_CONFIG.otherChargeRates[i]});
+ }
+ const fixed=TARIFF_CONFIG.fixedChargePerPeriod*TARIFF_CONFIG.billPeriod;
+ const duty=(fixed+energy+fac+other)*TARIFF_CONFIG.electricityDutyRate;
+ return{units,energy,fixed,fac,duty,other,total:energy+fixed+fac+duty+other,slabs};
+}
+function renderBill(bill){
+ ["energy","fixed","fac","duty","other"].forEach(key=>document.getElementById(key).textContent=money.format(bill[key]));
+ document.getElementById("estimated").textContent=money.format(bill.total);
+ document.getElementById("chartUnits").textContent=bill.units.toFixed(2);
+ document.getElementById("chartFixed").textContent=money.format(bill.fixed);
+ document.getElementById("chartEnergy").textContent=money.format(bill.energy);
+ document.getElementById("chartOther").textContent=money.format(bill.other);
+ document.getElementById("chartFac").textContent=money.format(bill.fac);
+ document.getElementById("mobileChartUnits").textContent=bill.units.toFixed(2);
+ bill.slabs.forEach((slab,index)=>{
+  document.getElementById(`slabUnit${index}`).textContent=slab.units.toFixed(2);
+  document.getElementById(`fixed${index}`).textContent=(index===0?bill.fixed:0).toFixed(2);
+  document.getElementById(`energy${index}`).textContent=slab.energy.toFixed(2);
+  document.getElementById(`other${index}`).textContent=slab.other.toFixed(2);
+  document.getElementById(`fac${index}`).textContent=slab.fac.toFixed(2);
+ });
+ mobileSlabs.innerHTML=bill.slabs.map((slab,index)=>`<article class="mobile-slab">
+  <h3><span>Slab ${SLAB_LABELS[index]}</span><span>${slab.units.toFixed(2)} units</span></h3>
+  <div class="mobile-slab-grid">
+   <div><span>Fixed</span><strong>${money.format(index===0?bill.fixed:0)}</strong></div>
+   <div><span>Energy</span><strong>${money.format(slab.energy)}</strong></div>
+   <div><span>Other</span><strong>${money.format(slab.other)}</strong></div>
+   <div><span>FAC</span><strong>${money.format(slab.fac)}</strong></div>
+  </div>
+ </article>`).join("");
+}
+function calculate(){
+ let dailyTotal=0,monthlyTotal=0;
+ tbody.querySelectorAll("tr").forEach(row=>{
+  const watt=safeNumber(row.querySelector(".watt").value);
+  const qty=safeNumber(row.querySelector(".qty").value);
+  const hours=Math.min(safeNumber(row.querySelector(".hours").value),24);
+  const daily=watt*qty*hours/1000,monthly=daily*30;
+  row.querySelector(".daily").textContent=daily.toFixed(2);
+  row.querySelector(".monthly").textContent=monthly.toFixed(2);
+  dailyTotal+=daily;monthlyTotal+=monthly;
+ });
+ document.getElementById("totalDaily").textContent=dailyTotal.toFixed(2);
+ document.getElementById("totalMonthly").textContent=monthlyTotal.toFixed(2);
+ renderBill(calculateBill(monthlyTotal));
+}
+function normalizeInput(event){
+ const input=event.target;
+ if(input.matches('input[type="number"]')&&safeNumber(input.value)!==Number(input.value))input.value=0;
+ if(input.classList.contains("hours")&&safeNumber(input.value)>24)input.value=24;
+ calculate();
+}
+function resetCalculator(){
+ tbody.querySelectorAll("tr").forEach((row,index)=>{
+  row.querySelector(".name").value=DEFAULT_APPLIANCES[index][0];
+  row.querySelector(".watt").value=DEFAULT_APPLIANCES[index][1];
+  row.querySelector(".qty").value=0;row.querySelector(".hours").value=DEFAULT_APPLIANCES[index][2];
+ });
+ calculate();
+}
+createRows();
+tbody.addEventListener("input",calculate);
+tbody.addEventListener("change",normalizeInput);
+document.getElementById("reset").addEventListener("click",resetCalculator);
+document.getElementById("print").addEventListener("click",()=>window.print());
+calculate();
+</script>
+</body>
+</html>

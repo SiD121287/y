@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.ElectricityCalculator" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:statusBarColor">#0D47A1</item>
+    </style>
+</resources>
